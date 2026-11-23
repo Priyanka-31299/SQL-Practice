@@ -1,0 +1,99 @@
+##Question 1 – Dealer-wise Renewal Performance
+1. Business scenario
+You are working as a Data Analyst at an insurance company.
+Your manager wants to analyse the renewal performance of different dealers for January 2026.
+You have been given two tables:
+Table 1: Dealers
+Table name: Dealers
+Column name	Data type	Description
+dealer_id	INT	Unique dealer ID
+dealer_name	VARCHAR	Dealer name
+branch	VARCHAR	Branch name
+
+Sample data:
+dealer_id	dealer_name	branch
+101	Honda Motors	Dehradun
+102	TVS Automobiles	Haridwar
+103	Royal Enfield	Nainital
+104	Suzuki Motors	Dehradun
+
+Table 2: Policies
+Table name: Policies
+Column name	Data type	Description
+policy_id	INT	Unique policy ID
+dealer_id	INT	Dealer ID
+customer_id	INT	Customer ID
+expiry_date	DATE	Policy expiry date
+policy_status	VARCHAR	Renewed / Pending
+premium	DECIMAL	Policy premium amount
+
+Sample data:
+policy_id	dealer_id	customer_id	expiry_date	policy_status	premium
+1001	101	501	2026-01-05	Renewed	5000
+1002	101	502	2026-01-12	Pending	6000
+1003	101	503	2026-01-20	Renewed	4500
+1004	102	504	2026-01-08	Pending	7000
+1005	102	505	2026-01-15	Renewed	5500
+1006	103	506	2026-01-18	Renewed	8000
+1007	103	507	2026-01-25	Pending	6500
+1008	104	508	2026-02-05	Renewed	4000
+
+
+2. Your task
+Your manager wants a dealer-wise renewal performance report for January 2026.
+
+Write a SQL query to extract the following information:
+1. dealer_name
+2. branch
+3. total_expiring_policies – Total policies expiring in January 2026.
+4. renewed_policies – Number of policies successfully renewed.
+5. pending_policies – Number of policies still pending.
+6. total_premium – Total premium of policies expiring in January.
+7. renewal_percentage – Calculate the renewal percentage.
+
+Important conditions
+- Include all four dealers, even if a dealer has no policies expiring in January.
+- Consider only policies expiring between 1 January and 31 January 2026.
+- Do not count February policies.
+- Avoid NULL values in your calculated output.
+- Sort the result by renewal percentage in descending order.
+
+##Sqlcode
+WITH renewal_cte AS
+(
+    SELECT
+        d.dealer_name,
+        d.branch,
+        COUNT(p.policy_id) AS total_expiring_policies,
+        COUNT(CASE
+            WHEN p.policy_status = 'Renewed' THEN 1
+        END) AS renewed_policies,
+        COUNT(CASE
+            WHEN p.policy_status = 'Pending' THEN 1
+        END) AS pending_policies,
+        COALESCE(SUM(p.premium), 0) AS total_premium
+    FROM Dealers d
+    LEFT JOIN Policies p
+        ON d.dealer_id = p.dealer_id
+        AND p.expiry_date >= '2026-01-01'
+        AND p.expiry_date < '2026-02-01'
+    GROUP BY
+        d.dealer_name,
+        d.branch
+)
+SELECT
+    dealer_name,
+    branch,
+    total_expiring_policies,
+    renewed_policies,
+    pending_policies,
+    total_premium,
+   COALESCE(
+        100.0 * renewed_policies /
+        NULLIF(total_expiring_policies, 0),
+        0
+    ) AS renewal_percentage
+FROM renewal_cte
+ORDER BY
+    renewal_percentage DESC,
+    dealer_name ASC;
