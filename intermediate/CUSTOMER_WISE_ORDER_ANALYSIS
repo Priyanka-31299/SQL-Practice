@@ -57,7 +57,7 @@ WITH customer_cte AS
 
     LEFT JOIN Orders o
         ON c.customer_id = o.customer_id
-        AND o.order_date >= '2026-03-01'
+        AND o.order_date >= '2026-03-01' ---- WE CAN ALSO ADD HERE AND O.ORDER_STATUS = 'COMPLETED' THEN WE CAN SIMPLY WRITE WITHOUR USING CASE STATEMENT IN SUM AND COUNT FUNCTIONS
         AND o.order_date < '2026-04-01'
 
     GROUP BY
