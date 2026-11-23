@@ -1,0 +1,80 @@
+Question 3 – Customer-wise Order Analysis
+1. Business scenario
+You are working as a Data Analyst for an e-commerce company.
+Your manager wants a report showing customer-wise completed orders for March 2026.
+
+You have two tables:
+
+Table 1: Customers
+Column	Data type
+customer_id	INT
+customer_name	VARCHAR
+city	VARCHAR
+
+Table 2: Orders
+Column	Data type
+order_id	INT
+customer_id	INT
+order_date	DATE
+order_status	VARCHAR
+order_amount	DECIMAL
+
+2. Your task
+Write a SQL query to extract:
+1. customer_id
+2. customer_name
+3. city
+4. total_completed_orders – Number of completed orders in March 2026.
+5. total_revenue – Total amount from completed orders in March 2026.
+Conditions:
+- Include all five customers, even those without completed orders.
+- Consider only March 2026 orders.
+- Consider only Completed orders.
+- Replace NULL values with zero.
+- Sort by total revenue in descending order.
+
+
+WITH customer_cte AS
+(
+    SELECT
+        c.customer_id,
+        c.customer_name,
+        c.city,
+
+        COUNT(CASE
+            WHEN o.order_status = 'Completed' THEN 1
+        END) AS total_completed_orders,
+
+        COALESCE(
+            SUM(CASE
+                WHEN o.order_status = 'Completed'
+                THEN o.order_amount
+                ELSE 0
+            END), 0
+        ) AS total_revenue
+
+    FROM Customers c
+
+    LEFT JOIN Orders o
+        ON c.customer_id = o.customer_id
+        AND o.order_date >= '2026-03-01'
+        AND o.order_date < '2026-04-01'
+
+    GROUP BY
+        c.customer_id,
+        c.customer_name,
+        c.city
+)
+
+SELECT
+    customer_id,
+    customer_name,
+    city,
+    total_completed_orders,
+    total_revenue
+
+FROM customer_cte
+
+ORDER BY
+    total_revenue DESC,
+    customer_id ASC;
